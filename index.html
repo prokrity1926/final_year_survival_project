@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Final Year Student Survival App</title>
+    <style>
+        body { font-family: Arial; background: #eef2f5; padding: 20px; }
+        .container { max-width: 800px; margin:auto; background:white; padding:20px; border-radius:8px; }
+        .menu button { margin:5px; padding:6px 12px; background:#3498db; color:white; border:none; cursor:pointer; border-radius:4px; }
+        .section { display:none; margin-top:20px; }
+        input { padding:5px; margin:5px 0; width:150px; }
+        .course { margin-bottom:5px; }
+        h3 { color:#2c3e50; }
+        button:hover { opacity:0.9; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>🎓 Final Year Student Survival App</h2>
+    <!-- Menu -->
+    <div class="menu">
+        <button onclick="showSection('cgpa')">CGPA Calculator</button>
+        <button onclick="showSection('skill')">Skill Tracker</button>
+        <button onclick="showSection('resume')">Resume Checker</button>
+        <button onclick="showSection('internship')">Internship Tracker</button>
+        <button onclick="showSection('deadline')">Deadline & Stress Manager</button>
+    </div>
+
+    <!-- CGPA Calculator -->
+    <div id="cgpa" class="section">
+        <h3>📊 CGPA Calculator</h3>
+        <div id="courses">
+            <div class="course">
+                <input type="text" placeholder="Course Name">
+                <input type="number" placeholder="Credit" min="1">
+                <input type="number" placeholder="Grade (0-4)" step="0.01" min="0" max="4">
+            </div>
+        </div>
+        <button onclick="addCourse()">➕ Add Course</button>
+        <button onclick="calcCGPA()">✅ Calculate GPA</button>
+        <p id="cgpaResult"></p>
+    </div>
+
+    <!-- Skill Tracker -->
+    <div id="skill" class="section">
+        <h3>🧠 Skill Tracker</h3>
+        <label>আমি কি হতে চাই:</label>
+        <select id="careerGoal" onchange="loadSkills()">
+            <option value="">--Select Career Goal--</option>
+            <option value="software">Software Engineer</option>
+            <option value="data">Data Analyst</option>
+            <option value="web">Web Developer</option>
+        </select>
+
+        <div id="skillOptions"></div><br>
+        <button onclick="checkSkills()">✅ Check Skills</button>
+        <p id="skillResult"></p>
+    </div>
+
+    <!-- Resume Checker -->
+    <div id="resume" class="section">
+        <h3>📄 Resume Checker</h3>
+        <label><input type="checkbox" class="r"> Education</label><br>
+        <label><input type="checkbox" class="r"> Skills</label><br>
+        <label><input type="checkbox" class="r"> Projects</label><br>
+        <label><input type="checkbox" class="r"> GitHub Link</label><br>
+        <label><input type="checkbox" class="r"> Contact Info</label><br><br>
+        <button onclick="checkResume()">✅ Check Resume</button>
+        <p id="out"></p>
+    </div>
+
+    <!-- Internship Tracker -->
+    <div id="internship" class="section">
+        <h3>💼 Internship Tracker</h3>
+        <input type="text" id="company" placeholder="Company Name">
+        <input type="text" id="position" placeholder="Position">
+        <button onclick="addInternship()">➕ Add Internship</button>
+        <p id="internshipList"></p>
+    </div>
+
+    <!-- Deadline & Stress Manager -->
+    <div id="deadline" class="section">
+        <h3>⏰ Deadline & Stress Manager</h3>
+        <input type="text" id="task" placeholder="Task / Deadline">
+        <button onclick="addDeadline()">➕ Add Task</button>
+        <p id="deadlineList"></p>
+    </div>
+</div>
+
+<!-- Script -->
+<script>
+    /************ Show / Hide Sections ************/
+    function showSection(id) {
+        let sections = document.querySelectorAll(".section");
+        sections.forEach(sec => sec.style.display = "none"); // Hide all
+        document.getElementById(id).style.display = "block"; // Show selected
+    }
+
+    /************ Resume Checker ************/
+    function checkResume() {
+        let items = document.querySelectorAll(".r");
+        let total = items.length;
+        let done = 0;
+        items.forEach(i => { if(i.checked) done++; });
+        let percent = Math.round((done / total) * 100);
+        document.getElementById("out").innerText = "Resume Ready: " + percent + "%";
+    }
+
+    /************ CGPA Calculator ************/
+    function addCourse() {
+        let container = document.getElementById("courses");
+        let div = document.createElement("div");
+        div.className = "course";
+        div.innerHTML = `
+            <input type="text" placeholder="Course Name">
+            <input type="number" placeholder="Credit" min="1">
+            <input type="number" placeholder="Grade (0-4)" step="0.01" min="0" max="4">
+        `;
+        container.appendChild(div);
+    }
+
+    function calcCGPA() {
+        let courseDivs = document.querySelectorAll("#courses .course");
+        let totalCredits = 0;
+        let totalPoints = 0;
+
+        courseDivs.forEach(div => {
+            let credit = parseFloat(div.children[1].value);
+            let grade = parseFloat(div.children[2].value);
+            if (!isNaN(credit) && !isNaN(grade)) {
+                totalCredits += credit;
+                totalPoints += grade * credit;
+            }
+        });
+
+        if(totalCredits === 0) {
+            document.getElementById("cgpaResult").innerText = "Enter at least one valid course";
+            return;
+        }
+
+        let gpa = totalPoints / totalCredits;
+        document.getElementById("cgpaResult").innerText = "Your GPA: " + gpa.toFixed(2);
+    }
+
+    /************ Skills Tracker ************/
+    const careerSkills = {
+        software: ["C / C++", "OOP", "Data Structures", "Git & GitHub"],
+        data: ["Python", "SQL", "Statistics", "Machine Learning"],
+        web: ["HTML/CSS", "JavaScript", "React", "Git & GitHub"]
+    };
+
+    function loadSkills() {
+        let goal = document.getElementById("careerGoal").value;
+        let container = document.getElementById("skillOptions");
+        container.innerHTML = ""; // clear previous
+        if(!goal) return;
+
+        careerSkills[goal].forEach(skill => {
+            let label = document.createElement("label");
+            label.innerHTML = `<input type="checkbox" class="s"> ${skill}`;
+            container.appendChild(label);
+            container.appendChild(document.createElement("br"));
+        });
+    }
+
+    function checkSkills() {
+        let items = document.querySelectorAll("#skillOptions .s");
+        let total = items.length;
+        let done = 0;
+        items.forEach(i => { if(i.checked) done++; });
+        let percent = total ? Math.round((done / total) * 100) : 0;
+        document.getElementById("skillResult").innerText = "Skills Completed: " + percent + "%";
+    }
+
+    /************ Internship Tracker ************/
+    let internships = [];
+    function addInternship() {
+        let company = document.getElementById("company").value;
+        let position = document.getElementById("position").value;
+        if(company && position) {
+            internships.push(company + " - " + position);
+            document.getElementById("internshipList").innerHTML = internships.join("<br>");
+            document.getElementById("company").value = "";
+            document.getElementById("position").value = "";
+        } else {
+            alert("Enter both Company and Position");
+        }
+    }
+
+    /************ Deadline & Stress Manager ************/
+    let tasks = [];
+    function addDeadline() {
+        let task = document.getElementById("task").value;
+        if(task) {
+            tasks.push(task);
+            document.getElementById("deadlineList").innerHTML = tasks.join("<br>");
+            document.getElementById("task").value = "";
+        } else {
+            alert("Enter a task");
+        }
+    }
+</script>
+</body>
+</html>
